@@ -200,9 +200,10 @@ class CUP$parser$actions {
 		int v4left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
 		int v4right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
 		Object v4 = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
-		if(!asignacion){
+		if(!asignacion || !todo_bien){
                     System.err.println("La variable " + v4 + " no ha sido inicializada, erro fila " + v4left + " columna " + v4right);
                     asignacion = true;
+                    todo_bien = true;
                 }
                 else{
                     elementos.addElement(v4);
