@@ -1,0 +1,138 @@
+package MIPS; 
+import java_cup.runtime.*;
+import java.io.*; 
+import java.util.*;
+ 
+action code {:
+    Vector elementos = new Vector();
+    boolean todo_bien = true;
+    boolean contenido = false;
+    boolean asignacion = true;
+:}; 
+ 
+parser code {:
+
+public static void main(String[] arg){     
+    if (arg.length!=1)       
+        System.out.println("Debe dar el nombre del fichero de entrada como parámetro");     
+    else     
+    {          
+        String fileName=arg[0];          
+        LexicalAnalyzerMIPS miAnalizadorLexico=null;          
+        parser parserObj=null;          
+        Symbol x=null;                    
+
+        try{            
+            miAnalizadorLexico =             
+                new LexicalAnalyzerMIPS(new InputStreamReader(new FileInputStream(fileName)));
+        
+        } catch (IOException e){            
+            System.err.println("Fichero de entrada "+fileName+" no encontrado");            
+            System.exit(0);          
+        }          
+        try{             
+            parserObj = new parser(miAnalizadorLexico);             
+            x=parserObj.parse();          
+        } catch (Exception e) {             
+            System.err.println("No se pudo inicializar el compilador");             
+            System.exit(0);          
+        }       
+    } // end else 
+} 
+:};
+
+terminal LEER, MOSTRAR, PUNTO_COMA, ASIGNACION, MULTIPLICACION, DIVISION, SUMA, RESTA, PAR_ABIERTO, PAR_CERRADO, UMINUS;
+terminal VARIABLE_VALIDA;
+terminal Integer INTEGER_LITERAL;
+ 
+non terminal expr_list, expr_part;
+non terminal Integer operacion;
+ 
+precedence left SUMA, RESTA; 
+precedence left MULTIPLICACION, DIVISION;
+precedence left UMINUS;
+
+
+/* Gramática */
+
+expr_list ::= expr_list expr_part 
+	      | 
+              expr_part;
+
+expr_part ::= operacion:op PUNTO_COMA
+              |
+              error:err
+              {:System.err.println("Error sintactica, falta un punto y coma o un parentesis, linea " + errleft + " columna " + errright); :};
+
+operacion ::= operacion:op1 SUMA operacion:op2
+              {:if(todo_bien)
+                    System.out.println("Se ha sumado correctamente");
+                else{
+                    todo_bien = true;
+                    asignacion = false;
+                } :}
+              |
+              operacion:op3 RESTA operacion:op4
+              {:if(todo_bien)
+                    System.out.println("Se ha restado correctamente");
+                else{
+                    todo_bien = true;
+                    asignacion = false;
+                } :}
+              |
+              operacion:op5 MULTIPLICACION operacion:op6
+              {:if(todo_bien)
+                    System.out.println("Se ha multiplicado correctamente");
+                else{
+                    todo_bien = true;
+                    asignacion = false;
+                } :}
+              |
+              operacion:op7 DIVISION operacion:op8
+              {:if(todo_bien)
+                    System.out.println("Se ha dividido correctamente");
+                else{
+                    todo_bien = true;
+                    asignacion = false;
+                } :}
+              |
+              INTEGER_LITERAL:i
+              |
+              VARIABLE_VALIDA:v3
+              {:contenido = elementos.contains(v3);
+
+              if(!contenido){
+              System.err.println("La variable " + v3 + " no ha sido inicializada, erro fila " + v3left + " columna " + v3right);
+              todo_bien = false;
+              }:}
+              |
+              PAR_ABIERTO operacion PAR_CERRADO
+              {:if(todo_bien){
+                    System.out.println("Se ha detectado parentesis");
+                    todo_bien = true;
+                } :}
+              |
+              RESTA operacion:op1
+              %prec UMINUS
+              |
+              LEER VARIABLE_VALIDA:v1
+              {:System.out.println("Se ha leido correctamente la variable " + v1);
+              elementos.addElement(v1); :}
+              |
+              MOSTRAR VARIABLE_VALIDA:v2
+              {:contenido = elementos.contains(v2);
+
+              if(contenido)
+                System.out.println("Se ha mostrado correctamente la variable " + v2);
+              else
+                System.err.println("La variable " + v2 + " no ha sido inicializada, erro fila " + v2left + " columna " + v2right); :}
+              |
+              VARIABLE_VALIDA:v4 ASIGNACION operacion
+              {:if(!asignacion){
+                    System.err.println("La variable " + v4 + " no ha sido inicializada, erro fila " + v4left + " columna " + v4right);
+                    asignacion = true;
+                }
+                else{
+                    elementos.addElement(v4);
+                    System.out.println("Se ha asignado correctamente el valor a la variable " + v4);
+                } :};
